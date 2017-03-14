@@ -17,8 +17,8 @@ class Issue {
 		return true;
 	}
 	
-	public static function ReturnIssueClasses() {
-		return [
+	public static function ReturnIssueClasses($language = 'ru'): array {
+		$classes = [
 			'ru' => 
 				[
 					'1' => 'Взаимоотношения с семьей',
@@ -30,5 +30,7 @@ class Issue {
 					'7' => 'Другое',
 				]
 		];
+		
+		return $classes[$language];
 	}
 }
