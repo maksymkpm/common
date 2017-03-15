@@ -1,5 +1,6 @@
 <?php
 use \RequestParameters\IssueCreate;
+use \RequestParameters\IssueEdit;
 
 class Issue {
 	const STATUS_NEW = 'new';
@@ -42,7 +43,6 @@ class Issue {
 	}
 
 	public static function Create(\RequestParameters\IssueCreate $property): ?Issue {
-
 		if (empty($property)) {
 			throw new \RuntimeException('Issue data is empty.');
 		}
@@ -71,7 +71,23 @@ class Issue {
 		return self::Get(self::issueDatabase()->last_insert_id());
 	}
 
-	public static function validateIssue(array $issueData) {
+	public static function Edit(\RequestParameters\IssueEdit $property): ?Issue {		
+		$issueData = self::Get($property->issue_id);
+		$issueData = $property->getModified($issueData);
+
+		self::validateIssue($issueData, 'edit');
+
+		self::issueDatabase()
+			->update('issue')
+			->values($issueData)
+			->where('issue_id = :issue_id')
+			->binds('issue_id', $property->issue_id)
+			->execute();
+			
+		return self::Get($property->issue_id);
+	}
+	
+	public static function validateIssue(array $issueData, $action = 'create') {
 		$validation = new \validation('issue');
 
 		$validation->add_field('member_id')
@@ -110,13 +126,10 @@ class Issue {
 			->add_rule(validation::IS_NUMBER, null, 'Invalid comments_amount.');
 
 		if (!$validation->is_valid($issueData)) {
-			var_dump($validation->get_errors()); exit;
+			print_r($validation->get_errors()); exit;
+			//return $validation->get_errors();
 			throw new ValidationException($validation->get_errors());
 		}
-	}
-
-	public function Update($issueId = 0) {
-		return true;
 	}
 
 	public function Delete($issueId = 0) {
