@@ -51,7 +51,7 @@ class Issue {
 			'member_id' => $property->member_id,
 			'title' => $property->title,
 			'description' => $property->description,
-			'class_id' => $property->class_id,
+			'class_id' => 1,
 			'category_id' => $property->category_id,
 			'object_id' => $property->object_id,
 			'subject_id' => $property->subject_id,
@@ -102,38 +102,39 @@ class Issue {
 		$validation = new \validation('issue');
 
 		$validation->add_field('member_id')
-			->add_rule(validation::NOT_EMPTY, null, 'member id cannot be empty.')
-			->add_rule(validation::MAX_LENGTH, 50, '\'s length cannot be more than 255 characters.');
+			->add_rule(validation::NOT_EMPTY, null, 'Member id cannot be empty.')
+			->add_rule(validation::MAX_LENGTH, 50, 'Member\'s length cannot be more than 50 characters.');
 
 		$validation->add_field('title')
-			->add_rule(validation::NOT_EMPTY, null, ' cannot be empty.')
-			->add_rule(validation::MIN_LENGTH, 2, ' must be at least 8 valid characters.')
-			->add_rule(validation::MAX_LENGTH, 255, 'The length of  cannot be more than 255 characters.');
+			->add_rule(validation::NOT_EMPTY, null, 'Title cannot be empty.')
+			->add_rule(validation::MIN_LENGTH, 8, ' Title must be at least 8 valid characters.')
+			->add_rule(validation::MAX_LENGTH, 255, 'The length of title cannot be more than 255 characters.');
 
 		$validation->add_field('description')
-			->add_rule(validation::NOT_EMPTY, null, 'description cannot be empty.')
-			->add_rule(validation::MIN_LENGTH, 2, 'description require a minimum two characters');
-
-		$validation->add_field('class_id')
-			->add_rule(validation::NOT_EMPTY, null, 'class_id cannot be empty.');
+			->add_rule(validation::NOT_EMPTY, null, 'Description cannot be empty.')
+			->add_rule(validation::MIN_LENGTH, 2, 'Description require a minimum two characters');
 
 		$validation->add_field('category_id')
-			->add_rule(validation::NOT_EMPTY, null, 'category_id cannot be empty.');
+			->add_rule(validation::IS_NUMBER, null, 'Invalid category.')
+			->add_rule(validation::NOT_EMPTY, null, 'Category cannot be empty.');
 
 		$validation->add_field('object_id')
-			->add_rule(validation::NOT_EMPTY, null, 'object_id cannot be empty.');
+			->add_rule(validation::IS_NUMBER, null, 'Invalid object.')
+			->add_rule(validation::NOT_EMPTY, null, 'Object cannot be empty.');
 
 		$validation->add_field('subject_id')
-			->add_rule(validation::NOT_EMPTY, null, 'subject_id cannot be empty.');
+			->add_rule(validation::IS_NUMBER, null, 'Subject is not provided.')
+			->add_rule(validation::NOT_EMPTY, null, 'Subject cannot be empty.');
 
 		$validation->add_field('priority')
-			->add_rule(validation::NOT_EMPTY, null, 'priority cannot be empty.');
+			->add_rule(validation::IS_NUMBER, null, 'Invalid priority.')
+			->add_rule(validation::NOT_EMPTY, null, 'Priority cannot be empty.');
 
 		$validation->add_field('status')
-			->add_rule(validation::NOT_EMPTY, null, 'Member status cannot be empty.');
+			->add_rule(validation::NOT_EMPTY, null, 'Issue status cannot be empty.');
 
 		$validation->add_field('comments_amount')
-			->add_rule(validation::IS_NUMBER, null, 'Invalid comments_amount.');
+			->add_rule(validation::IS_NUMBER, null, 'Invalid comments amount.');
 
 		if (!$validation->is_valid($issueData)) {
 			throw new ValidationException($validation->get_errors());

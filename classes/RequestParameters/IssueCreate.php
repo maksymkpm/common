@@ -5,7 +5,7 @@ class IssueCreate extends IssueRequestParameters {
 	protected $member_id;
 	protected $title;
 	protected $description;
-	protected $class_id;
+	protected $class_id = 1;
 	protected $category_id;
 	protected $object_id;
 	protected $subject_id;
