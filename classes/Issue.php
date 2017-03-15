@@ -71,11 +71,19 @@ class Issue {
 		return self::Get(self::issueDatabase()->last_insert_id());
 	}
 
-	public static function Edit(\RequestParameters\IssueEdit $property): ?Issue {		
-		$issueData = self::Get($property->issue_id);
-		$issueData = $property->getModified($issueData);
+	public static function Edit(\RequestParameters\IssueEdit $property): ?Issue {
+		$issue = self::Get($property->issue_id);
+		$issueData = $property->getModified($issue);
 
-		self::validateIssue($issueData, 'edit');
+		$issue_array = [];
+		foreach ($issue->data as $key => $value) {
+			$issue_array[$key] = $value;
+			if (isset($issueData[$key])) {
+				$issue_array[$key] = $issueData[$key];
+			}
+		}
+
+		self::validateIssue($issue_array);
 
 		self::issueDatabase()
 			->update('issue')
@@ -83,11 +91,11 @@ class Issue {
 			->where('issue_id = :issue_id')
 			->binds('issue_id', $property->issue_id)
 			->execute();
-			
+
 		return self::Get($property->issue_id);
 	}
-	
-	public static function validateIssue(array $issueData, $action = 'create') {
+
+	public static function validateIssue(array $issueData) {
 		$validation = new \validation('issue');
 
 		$validation->add_field('member_id')
@@ -122,12 +130,9 @@ class Issue {
 			->add_rule(validation::NOT_EMPTY, null, 'Member status cannot be empty.');
 
 		$validation->add_field('comments_amount')
-			//->add_rule(validation::NOT_EMPTY, null, 'comments_amount cannot be empty.')
 			->add_rule(validation::IS_NUMBER, null, 'Invalid comments_amount.');
 
 		if (!$validation->is_valid($issueData)) {
-			print_r($validation->get_errors()); exit;
-			//return $validation->get_errors();
 			throw new ValidationException($validation->get_errors());
 		}
 	}
