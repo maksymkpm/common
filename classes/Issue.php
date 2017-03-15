@@ -25,7 +25,7 @@ class Issue {
 		}
 
 		$query = '  SELECT issue_id, member_id, title, description, class_id,
-						category_id, object_id, subject_id, priority, status, comments_amount, date_added
+						category_id, object_id, subject_id, priority, status, comments_amount, last_updated, date_added
   					FROM issue
   					WHERE issue_id = :issue_id';
 
@@ -36,7 +36,7 @@ class Issue {
 			->fetch();
 
 		if (empty($issueData)) {
-			return null;
+			throw new \RuntimeException('Requested issue not found.');
 		}
 
 		return new self($issueData);
@@ -58,6 +58,7 @@ class Issue {
 			'priority' => 3,
 			'status' => self::STATUS_NEW,
 			'comments_amount' => 0,
+			'last_updated' => \db::expression('UTC_TIMESTAMP()'),
 			'date_added' => \db::expression('UTC_TIMESTAMP()'),
 		];
 
@@ -74,6 +75,8 @@ class Issue {
 	public static function Edit(\RequestParameters\IssueEdit $property): ?Issue {
 		$issue = self::Get($property->issue_id);
 		$issueData = $property->getModified($issue);
+
+		$issueData['last_updated'] = \db::expression('UTC_TIMESTAMP()');
 
 		$issue_array = [];
 		foreach ($issue->data as $key => $value) {
@@ -248,6 +251,10 @@ class Issue {
 		return $this->data['comments_amount'];
 	}
 
+	public function getLastUpdated() {
+		return $this->data['last_updated'];
+	}
+	
 	public function getDateAdded() {
 		return $this->data['date_added'];
 	}
