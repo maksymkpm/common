@@ -8,7 +8,7 @@ class Comment {
 	const STATUS_DELETED = 'deleted';
 	const STATUS_ARCHIVED = 'archived';
 
-	protected $data;
+	public $data;
 
 	private function __construct(array $commentData) {
 		if (empty($commentData) || empty($commentData['comment_id'])) {
@@ -19,7 +19,6 @@ class Comment {
 	}
 
 	public static function Get(int $comment_id): ?Comment {
-
 		if ($comment_id < 1) {
 			throw new \RuntimeException('Wrong comment ID format.');
 		}
@@ -55,7 +54,7 @@ class Comment {
 			'date_added' => \db::expression('UTC_TIMESTAMP()'),
 		];
 
-		self::validateComment($commentData);
+		new \FormValidation($commentData, 'Comment');
 
 		self::commentDatabase()
 			->insert('issue_comment')
@@ -79,7 +78,7 @@ class Comment {
 			}
 		}
 
-		self::validateComment($issue_array);
+		new \FormValidation($commentData, 'Comment');
 
 		self::commentDatabase()
 			->update('issue_comment')
@@ -92,6 +91,10 @@ class Comment {
 	}
 
 	public static function Publish(\RequestParameters\CommentEdit $property): ?Comment {
+		if (!($property->issue_id)) {
+			throw new \RuntimeException('Comment cannot be published without issue id.');
+		}
+
 		$result = self::commentDatabase()
 						->update('issue_comment')
 						->values([
@@ -103,6 +106,8 @@ class Comment {
 						->execute();
 
 		if ($result) {
+			self::updateIssueCount($property->issue_id, true);
+
 			return new self(['comment_id' => $property->comment_id]);
 		}
 
@@ -110,6 +115,10 @@ class Comment {
 	}
 
 	public static function Delete(\RequestParameters\CommentEdit $property): ?Comment {
+		if (!($property->issue_id)) {
+			throw new \RuntimeException('Comment cannot be deleted without issue id.');
+		}
+
 		$result = self::commentDatabase()
 						->update('issue_comment')
 						->values([
@@ -121,6 +130,8 @@ class Comment {
 						->execute();
 
 		if ($result) {
+			self::updateIssueCount($property->issue_id, false);
+
 			return new self(['comment_id' => $property->comment_id]);
 		}
 
@@ -128,6 +139,10 @@ class Comment {
 	}
 
 	public static function Archive(\RequestParameters\CommentEdit $property): ?Comment {
+		if (!($property->issue_id)) {
+			throw new \RuntimeException('Comment cannot be archived without issue id.');
+		}
+
 		$result = self::commentDatabase()
 						->update('issue_comment')
 						->values([
@@ -139,64 +154,30 @@ class Comment {
 						->execute();
 
 		if ($result) {
+			self::updateIssueCount($property->issue_id, false);
+
 			return new self(['comment_id' => $property->comment_id]);
 		}
 
 		throw new \RuntimeException('Comment not archived.');
 	}
 
-	public static function validateComment(array $commentData) {
-		$validation = new \validation('issue_comment');
-
-		$validation->add_field('issue_id')
-			->add_rule(validation::NOT_EMPTY, null, 'Issue id cannot be empty.')
-			->add_rule(validation::IS_NUMBER, null, 'Invalid issue id.');
-
-		$validation->add_field('member_id')
-			->add_rule(validation::NOT_EMPTY, null, 'Member id cannot be empty.')
-			->add_rule(validation::MAX_LENGTH, 50, 'Member\'s length cannot be more than 50 characters.');
-
-		$validation->add_field('message')
-			->add_rule(validation::NOT_EMPTY, null, 'Message cannot be empty.')
-			->add_rule(validation::MIN_LENGTH, 2, 'Message require a minimum two characters');
-
-		$validation->add_field('status')
-			->add_rule(validation::NOT_EMPTY, null, 'Issue status cannot be empty.');
-
-		if (!$validation->is_valid($commentData)) {
-			throw new ValidationException($validation->get_errors());
-		}
-	}
-
 	public static function commentDatabase(): \db {
 		return \db::connect('issue');
 	}
 
-	public function getCommentId() {
-		return $this->data['comment_id'];
-	}
+	private static function updateIssueCount($issue_id, $add) {
+		$comments_amount = 'comments_amount+1';
+		if ($add !== true) {
+			$comments_amount = 'comments_amount-1';
+		}
 
-	public function getIssueId() {
-		return $this->data['issue_id'];
-	}
+		$query = "
+			UPDATE issue
+			SET comments_amount = {$comments_amount}
+			WHERE issue_id = :issue_id
+		";
 
-	public function getMemberId() {
-		return $this->data['member_id'];
-	}
-
-	public function getMessage() {
-		return $this->data['message'];
-	}
-
-	public function getStatus() {
-		return $this->data['status'];
-	}
-
-	public function getLastUpdated() {
-		return $this->data['last_updated'];
-	}
-
-	public function getDateAdded() {
-		return $this->data['date_added'];
+		self::commentDatabase()->query($query, [':issue_id' => $issue_id]);
 	}
 }
