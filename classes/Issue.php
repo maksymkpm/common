@@ -101,10 +101,6 @@ class Issue {
 		return self::Get($property->issue_id);
 	}
 
-	public function Delete($issueId = 0) {
-		return true;
-	}
-
 	public static function issueDatabase(): \db {
 		return \db::connect('issue');
 	}
