@@ -91,9 +91,63 @@ class Comment {
 		return self::Get($property->comment_id);
 	}
 
+	public static function Publish(\RequestParameters\CommentEdit $property): ?Comment {
+		$result = self::commentDatabase()
+						->update('issue_comment')
+						->values([
+							'last_updated' => \db::expression('UTC_TIMESTAMP()'),
+							'status' => self::STATUS_PUBLISHED,
+						])
+						->where('comment_id = :comment_id')
+						->binds('comment_id', $property->comment_id)
+						->execute();
+
+		if ($result) {
+			return new self(['comment_id' => $property->comment_id]);
+		}
+
+		throw new \RuntimeException('Comment not published.');
+	}
+
+	public static function Delete(\RequestParameters\CommentEdit $property): ?Comment {
+		$result = self::commentDatabase()
+						->update('issue_comment')
+						->values([
+							'last_updated' => \db::expression('UTC_TIMESTAMP()'),
+							'status' => self::STATUS_DELETED,
+						])
+						->where('comment_id = :comment_id')
+						->binds('comment_id', $property->comment_id)
+						->execute();
+
+		if ($result) {
+			return new self(['comment_id' => $property->comment_id]);
+		}
+
+		throw new \RuntimeException('Comment not deleted.');
+	}
+
+	public static function Archive(\RequestParameters\CommentEdit $property): ?Comment {
+		$result = self::commentDatabase()
+						->update('issue_comment')
+						->values([
+							'last_updated' => \db::expression('UTC_TIMESTAMP()'),
+							'status' => self::STATUS_ARCHIVED,
+						])
+						->where('comment_id = :comment_id')
+						->binds('comment_id', $property->comment_id)
+						->execute();
+
+		if ($result) {
+			return new self(['comment_id' => $property->comment_id]);
+		}
+
+		throw new \RuntimeException('Comment not archived.');
+	}
+
 	public static function validateComment(array $commentData) {
 		$validation = new \validation('issue_comment');
-		
+
 		$validation->add_field('issue_id')
 			->add_rule(validation::NOT_EMPTY, null, 'Issue id cannot be empty.')
 			->add_rule(validation::IS_NUMBER, null, 'Invalid issue id.');
@@ -117,11 +171,11 @@ class Comment {
 	public static function commentDatabase(): \db {
 		return \db::connect('issue');
 	}
-	
+
 	public function getCommentId() {
 		return $this->data['comment_id'];
 	}
-	
+
 	public function getIssueId() {
 		return $this->data['issue_id'];
 	}
@@ -141,7 +195,7 @@ class Comment {
 	public function getLastUpdated() {
 		return $this->data['last_updated'];
 	}
-	
+
 	public function getDateAdded() {
 		return $this->data['date_added'];
 	}
