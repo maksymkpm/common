@@ -23,7 +23,7 @@ class Comment {
 			throw new \RuntimeException('Wrong comment ID format.');
 		}
 
-		$query = '  SELECT comment_id, issue_id, member_id, message, status, last_updated, date_added
+		$query = '  SELECT comment_id, issue_id, member_id, message, status, helpful, not_helpful, last_updated, date_added
   					FROM issue_comment
   					WHERE comment_id = :comment_id';
 
@@ -49,6 +49,8 @@ class Comment {
 			'issue_id' => $property->issue_id,
 			'member_id' => $property->member_id,
 			'message' => $property->message,
+			'helpful' => 0,
+			'not_helpful' => 0,
 			'status' => self::STATUS_NEW,
 			'last_updated' => \db::expression('UTC_TIMESTAMP()'),
 			'date_added' => \db::expression('UTC_TIMESTAMP()'),
@@ -78,7 +80,7 @@ class Comment {
 			}
 		}
 
-		new \FormValidation($commentData, 'Comment');
+		new \FormValidation($issue_array, 'Comment');
 
 		self::commentDatabase()
 			->update('issue_comment')

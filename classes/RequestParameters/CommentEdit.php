@@ -7,6 +7,8 @@ class CommentEdit extends CommentRequestParameters {
 	protected $member_id;
 	protected $message;
 	protected $status;
+	protected $helpful;
+	protected $not_helpful;
 	protected $last_updated;
 	protected $date_added;
 }

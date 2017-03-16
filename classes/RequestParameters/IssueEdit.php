@@ -12,6 +12,8 @@ class IssueEdit extends IssueRequestParameters {
 	protected $subject_id;
 	protected $priorit;
 	protected $status;
+	protected $helpful;
+	protected $not_helpful;
 	protected $date_added;
 	protected $comments_amount;
 }

@@ -9,7 +9,7 @@ class Issue {
 	const STATUS_DELETED = 'deleted';
 	const STATUS_ARCHIVED = 'archived';
 
-	protected $data;
+	public $data;
 
 	private function __construct(array $issueData) {
 		if (empty($issueData) || empty($issueData['issue_id'])) {
@@ -24,8 +24,8 @@ class Issue {
 			throw new \RuntimeException('Wrong issue ID format.');
 		}
 
-		$query = '  SELECT issue_id, member_id, title, description, class_id,
-						category_id, object_id, subject_id, priority, status, comments_amount, last_updated, date_added
+		$query = '  SELECT issue_id, member_id, title, description, class_id, category_id, object_id, 
+						subject_id, priority, status, helpful, not_helpful, comments_amount, last_updated, date_added
   					FROM issue
   					WHERE issue_id = :issue_id';
 
@@ -57,12 +57,15 @@ class Issue {
 			'subject_id' => $property->subject_id,
 			'priority' => 3,
 			'status' => self::STATUS_NEW,
+			'helpful' => 0,
+			'not_helpful' => 0,
+			'comments_amount' => 0,
 			'comments_amount' => 0,
 			'last_updated' => \db::expression('UTC_TIMESTAMP()'),
 			'date_added' => \db::expression('UTC_TIMESTAMP()'),
 		];
 
-		self::validateIssue($issueData);
+		new \FormValidation($issueData, 'Issue');
 
 		self::issueDatabase()
 			->insert('issue')
@@ -86,7 +89,7 @@ class Issue {
 			}
 		}
 
-		self::validateIssue($issue_array);
+		new \FormValidation($issue_array, 'Issue');
 
 		self::issueDatabase()
 			->update('issue')
@@ -96,49 +99,6 @@ class Issue {
 			->execute();
 
 		return self::Get($property->issue_id);
-	}
-
-	public static function validateIssue(array $issueData) {
-		$validation = new \validation('issue');
-
-		$validation->add_field('member_id')
-			->add_rule(validation::NOT_EMPTY, null, 'Member id cannot be empty.')
-			->add_rule(validation::MAX_LENGTH, 50, 'Member\'s length cannot be more than 50 characters.');
-
-		$validation->add_field('title')
-			->add_rule(validation::NOT_EMPTY, null, 'Title cannot be empty.')
-			->add_rule(validation::MIN_LENGTH, 8, ' Title must be at least 8 valid characters.')
-			->add_rule(validation::MAX_LENGTH, 255, 'The length of title cannot be more than 255 characters.');
-
-		$validation->add_field('description')
-			->add_rule(validation::NOT_EMPTY, null, 'Description cannot be empty.')
-			->add_rule(validation::MIN_LENGTH, 2, 'Description require a minimum two characters');
-
-		$validation->add_field('category_id')
-			->add_rule(validation::IS_NUMBER, null, 'Invalid category.')
-			->add_rule(validation::NOT_EMPTY, null, 'Category cannot be empty.');
-
-		$validation->add_field('object_id')
-			->add_rule(validation::IS_NUMBER, null, 'Invalid object.')
-			->add_rule(validation::NOT_EMPTY, null, 'Object cannot be empty.');
-
-		$validation->add_field('subject_id')
-			->add_rule(validation::IS_NUMBER, null, 'Subject is not provided.')
-			->add_rule(validation::NOT_EMPTY, null, 'Subject cannot be empty.');
-
-		$validation->add_field('priority')
-			->add_rule(validation::IS_NUMBER, null, 'Invalid priority.')
-			->add_rule(validation::NOT_EMPTY, null, 'Priority cannot be empty.');
-
-		$validation->add_field('status')
-			->add_rule(validation::NOT_EMPTY, null, 'Issue status cannot be empty.');
-
-		$validation->add_field('comments_amount')
-			->add_rule(validation::IS_NUMBER, null, 'Invalid comments amount.');
-
-		if (!$validation->is_valid($issueData)) {
-			throw new ValidationException($validation->get_errors());
-		}
 	}
 
 	public function Delete($issueId = 0) {
@@ -206,57 +166,5 @@ class Issue {
 		];
 
 		return $categories[$language];
-	}
-
-	public function getIssueId() {
-		return $this->data['issue_id'];
-	}
-
-	public function getMemberId() {
-		return $this->data['member_id'];
-	}
-
-	public function getTitle() {
-		return $this->data['title'];
-	}
-
-	public function getDescription() {
-		return $this->data['description'];
-	}
-
-	public function getClassId() {
-		return $this->data['class_id'];
-	}
-
-	public function getCategoryId() {
-		return $this->data['category_id'];
-	}
-
-	public function getObjectId() {
-		return $this->data['object_id'];
-	}
-
-	public function getSubjectId() {
-		return $this->data['subject_id'];
-	}
-
-	public function getPriorityId() {
-		return $this->data['priority'];
-	}
-
-	public function getStatus() {
-		return $this->data['status'];
-	}
-
-	public function getCommentsAmount() {
-		return $this->data['comments_amount'];
-	}
-
-	public function getLastUpdated() {
-		return $this->data['last_updated'];
-	}
-	
-	public function getDateAdded() {
-		return $this->data['date_added'];
 	}
 }
