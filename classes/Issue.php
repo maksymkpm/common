@@ -100,6 +100,94 @@ class Issue {
 
 		return self::Get($property->issue_id);
 	}
+	
+	public static function Open(\RequestParameters\IssueEdit $property): ?Issue {
+		if (!($property->issue_id)) {
+			throw new \RuntimeException('Invalid issue id provided.');
+		}
+
+		$result = self::issueDatabase()
+						->update('issue')
+						->values([
+							'last_updated' => \db::expression('UTC_TIMESTAMP()'),
+							'status' => self::STATUS_OPENED,
+						])
+						->where('issue_id = :issue_id')
+						->binds('issue_id', $property->issue_id)
+						->execute();
+
+		if ($result) {
+			return new self(['issue_id' => $property->issue_id]);
+		}
+
+		throw new \RuntimeException('Issue is not opened.');
+	}
+	
+	public static function Close(\RequestParameters\IssueEdit $property): ?Issue {
+		if (!($property->issue_id)) {
+			throw new \RuntimeException('Invalid issue id provided.');
+		}
+
+		$result = self::issueDatabase()
+						->update('issue')
+						->values([
+							'last_updated' => \db::expression('UTC_TIMESTAMP()'),
+							'status' => self::STATUS_CLOSED,
+						])
+						->where('issue_id = :issue_id')
+						->binds('issue_id', $property->issue_id)
+						->execute();
+
+		if ($result) {
+			return new self(['issue_id' => $property->issue_id]);
+		}
+
+		throw new \RuntimeException('Issue is not closed.');
+	}
+	
+	public static function Delete(\RequestParameters\IssueEdit $property): ?Issue {
+		if (!($property->issue_id)) {
+			throw new \RuntimeException('Invalid issue id provided.');
+		}
+
+		$result = self::issueDatabase()
+						->update('issue')
+						->values([
+							'last_updated' => \db::expression('UTC_TIMESTAMP()'),
+							'status' => self::STATUS_DELETED,
+						])
+						->where('issue_id = :issue_id')
+						->binds('issue_id', $property->issue_id)
+						->execute();
+
+		if ($result) {
+			return new self(['issue_id' => $property->issue_id]);
+		}
+
+		throw new \RuntimeException('Issue is not deleted.');
+	}
+	
+	public static function Archive(\RequestParameters\IssueEdit $property): ?Issue {
+		if (!($property->issue_id)) {
+			throw new \RuntimeException('Invalid issue id provided.');
+		}
+
+		$result = self::issueDatabase()
+						->update('issue')
+						->values([
+							'last_updated' => \db::expression('UTC_TIMESTAMP()'),
+							'status' => self::STATUS_ARCHIVED,
+						])
+						->where('issue_id = :issue_id')
+						->binds('issue_id', $property->issue_id)
+						->execute();
+
+		if ($result) {
+			return new self(['issue_id' => $property->issue_id]);
+		}
+
+		throw new \RuntimeException('Issue is not archived.');
+	}
 
 	public static function issueDatabase(): \db {
 		return \db::connect('issue');
