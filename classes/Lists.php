@@ -3,7 +3,7 @@ use \RequestParameters\ListGet;
 
 class Lists {
 	private static $binding = [
-		'Issues' => ' ORDER BY i.last_updated DESC LIMIT 3',
+		'Issues' => ' ORDER BY i.last_updated DESC LIMIT 10',
 		'MyIssues' => [],
 	];
 
