@@ -1,7 +1,7 @@
 <?php
 class FormValidation extends validation {
 	protected $forms = [
-		'Comment', 'Issue'
+		'Comment', 'Issue', 'FeedbackIssue', 'FeedbackIssueComment'
 	];
 
 	public function __construct(array $data, string $form) {
@@ -14,6 +14,44 @@ class FormValidation extends validation {
 
 		$this->$form($data);
 	}
+
+    public static function FeedbackIssue(array $data) {
+        $validation = new parent('FeedbackIssue');
+
+        $validation->add_field('issue_id')
+            ->add_rule(validation::NOT_EMPTY, null, 'Issue id cannot be empty.')
+            ->add_rule(validation::IS_NUMBER, null, 'Invalid issue id.');
+
+        $validation->add_field('member_id')
+            ->add_rule(validation::NOT_EMPTY, null, 'Member id cannot be empty.')
+            ->add_rule(validation::MAX_LENGTH, 50, 'Member\'s length cannot be more than 50 characters.');
+
+        $validation->add_field('helpful')
+            ->add_rule(validation::NOT_EMPTY, null, 'Feedback cannot be empty.');
+
+        if (!$validation->is_valid($data)) {
+            throw new ValidationException($validation->get_errors());
+        }
+    }
+
+    public static function FeedbackIssueComment(array $data) {
+        $validation = new parent('FeedbackIssueComment');
+
+        $validation->add_field('comment_id')
+            ->add_rule(validation::NOT_EMPTY, null, 'Comment id cannot be empty.')
+            ->add_rule(validation::IS_NUMBER, null, 'Invalid comment id.');
+
+        $validation->add_field('member_id')
+            ->add_rule(validation::NOT_EMPTY, null, 'Member id cannot be empty.')
+            ->add_rule(validation::MAX_LENGTH, 50, 'Member\'s length cannot be more than 50 characters.');
+
+        $validation->add_field('helpful')
+            ->add_rule(validation::NOT_EMPTY, null, 'Feedback cannot be empty.');
+
+        if (!$validation->is_valid($data)) {
+            throw new ValidationException($validation->get_errors());
+        }
+    }
 
 	public static function Comment(array $data) {
 		$validation = new parent('Comment');
