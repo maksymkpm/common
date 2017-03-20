@@ -24,7 +24,7 @@ class FormValidation extends validation {
 
         $validation->add_field('member_id')
             ->add_rule(validation::NOT_EMPTY, null, 'Member id cannot be empty.')
-            ->add_rule(validation::MAX_LENGTH, 50, 'Member\'s length cannot be more than 50 characters.');
+            ->add_rule(validation::IS_NUMBER, null, 'Invalid member id.');
 
         $validation->add_field('helpful')
             ->add_rule(validation::NOT_EMPTY, null, 'Feedback cannot be empty.');
@@ -43,7 +43,7 @@ class FormValidation extends validation {
 
         $validation->add_field('member_id')
             ->add_rule(validation::NOT_EMPTY, null, 'Member id cannot be empty.')
-            ->add_rule(validation::MAX_LENGTH, 50, 'Member\'s length cannot be more than 50 characters.');
+            ->add_rule(validation::IS_NUMBER, null, 'Invalid member id.');
 
         $validation->add_field('helpful')
             ->add_rule(validation::NOT_EMPTY, null, 'Feedback cannot be empty.');
@@ -62,7 +62,7 @@ class FormValidation extends validation {
 
 		$validation->add_field('member_id')
 			->add_rule(validation::NOT_EMPTY, null, 'Member id cannot be empty.')
-			->add_rule(validation::MAX_LENGTH, 50, 'Member\'s length cannot be more than 50 characters.');
+			->add_rule(validation::IS_NUMBER, null, 'Invalid member id.');
 
 		$validation->add_field('message')
 			->add_rule(validation::NOT_EMPTY, null, 'Message cannot be empty.')
@@ -81,7 +81,7 @@ class FormValidation extends validation {
 
 		$validation->add_field('member_id')
 			->add_rule(validation::NOT_EMPTY, null, 'Member id cannot be empty.')
-			->add_rule(validation::MAX_LENGTH, 50, 'Member\'s length cannot be more than 50 characters.');
+			->add_rule(validation::IS_NUMBER, null, 'Invalid member id.');
 
 		$validation->add_field('title')
 			->add_rule(validation::NOT_EMPTY, null, 'Title cannot be empty.')
