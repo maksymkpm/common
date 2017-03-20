@@ -1,7 +1,7 @@
 <?php
 class FormValidation extends validation {
 	protected $forms = [
-		'Comment', 'Issue', 'FeedbackIssue', 'FeedbackIssueComment'
+		'Comment', 'Issue', 'FeedbackIssue', 'FeedbackIssueComment', 'MemberCreate'
 	];
 
 	public function __construct(array $data, string $form) {
@@ -116,6 +116,27 @@ class FormValidation extends validation {
 
 		if (!$validation->is_valid($data)) {
 			throw new ValidationException($validation->get_errors());
+		}
+	}
+	
+	public static function MemberCreate(array $data) {
+		$validation = new validation('MemberCreate');
+
+		$validation->add_field('username')
+			->add_rule(validation::NOT_EMPTY, null, 'Username cannot be empty.')
+			->add_rule(validation::EMAIL, null, 'Username should be a valid email address.')
+			->add_rule(validation::MAX_LENGTH, 255, 'Username\'s length cannot be more than 255 characters.');
+
+		$validation->add_field('password')
+			->add_rule(validation::NOT_EMPTY, null, 'Password cannot be empty.')
+			->add_rule(validation::MIN_LENGTH, 8, 'Password must be at least 8 valid characters.')
+			->add_rule(validation::MAX_LENGTH, 255, 'The length of password cannot be more than 255 characters.');
+
+		$validation->add_field('status')
+			->add_rule(validation::NOT_EMPTY, null, 'Member status cannot be empty.');
+
+		if (!$validation->is_valid($data)) {
+			throw new \ValidationException($validation->get_errors());
 		}
 	}
 }
