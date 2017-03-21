@@ -1,6 +1,6 @@
 <?php
 namespace RequestParameters;
 
-class MemberGet extends IssueRequestParameters {
+class MemberGet extends MemberRequestParameters {
 	protected $member_id;
 }

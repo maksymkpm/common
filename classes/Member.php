@@ -8,7 +8,7 @@ class Member {
 	const STATUS_DELELED = 'deleted';
 	const STATUS_ARCHIVED = 'archived';
 
-	public $data;
+	protected $data;
 
 	private function __construct(array $data) {
 		if (empty($data) || empty($data['member_id'])) {
@@ -18,15 +18,18 @@ class Member {
 		$this->data = $data;
 	}
 
+	public function returnData() {
+		return $this->data;
+	}
+	
 	public static function Get(int $memberId): ?Member {
 		if ($memberId < 1) {
 			throw new \RuntimeException('Wrong member ID format.');
 		}
 
-		$query = '  SELECT *
-  					FROM member m
-					LEFT JOIN member_details md ON m.member_id = md.member_id
-  					WHERE m.member_id = :memberId';
+		$query = '  SELECT member_id, gender, bdate, rating
+  					FROM member					
+  					WHERE member_id = :memberId';
 
 		$memberData = self::membersDatabase()
 			->select($query)
@@ -50,8 +53,8 @@ class Member {
 			'gender' => $property->gender,
 			'bdate' => $property->bdate,
 			'status' => self::STATUS_NEW,
-			'last_login' => $property->\db::expression('UTC_TIMESTAMP()'),
-			'date_added' => $property->\db::expression('UTC_TIMESTAMP()'),
+			'last_login' => \db::expression('UTC_TIMESTAMP()'),
+			'date_added' => \db::expression('UTC_TIMESTAMP()'),
 		];
 
 		$password = $property->password;
@@ -65,9 +68,9 @@ class Member {
 			'password' => password_hash($password, PASSWORD_BCRYPT),
 			'status' => self::STATUS_NEW,
 			'token' => self::CreateToken(),
-			'token_expiry' => 'NOW() + INTERVAL 4 HOUR',
-			'last_login' => $property->\db::expression('UTC_TIMESTAMP()'),
-			'date_added' => $property->\db::expression('UTC_TIMESTAMP()'),
+			'token_expiry' => \db::expression('DATE_ADD(UTC_TIMESTAMP(), INTERVAL 4 HOUR)'),
+			'last_login' => \db::expression('UTC_TIMESTAMP()'),
+			'date_added' => \db::expression('UTC_TIMESTAMP()'),
 		];
 
 		new \FormValidation($memberDetails, 'MemberCreate');
@@ -79,9 +82,7 @@ class Member {
 			->values($member)
 			->execute();
 
-		$memberDetails = [
-			'member_id' => self::membersDatabase()->last_insert_id(),
-		];
+		$memberDetails['member_id'] = self::membersDatabase()->last_insert_id();
 
 		self::membersDatabase()
 			->insert('member_details')

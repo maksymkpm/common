@@ -2,6 +2,6 @@
 
 namespace RequestParameters;
 
-class MemberParameters extends RequestParameters {
+class MemberRequestParameters extends RequestParameters {
 	protected $__fieldMapping = [];
 }
