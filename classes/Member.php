@@ -21,14 +21,58 @@ class Member {
 	public function returnData() {
 		return $this->data;
 	}
-	
+
+	public static function Auth(array $data = []): ?Member {
+		
+		if (!isset($data['origin'])) {
+			throw new \RuntimeException('Unknown origin.');
+		}
+
+		switch ($data['origin']) {
+			case 'vk':
+				$result = self::AuthVK($data['vk_member_id']);
+				break;
+		}
+
+		return $result;
+	}
+
+	private static function AuthVK($vk_member_id) {
+		
+		$query = '	SELECT member_id
+					FROM member_details
+					WHERE username = :vk_member_id';
+
+		$memberData = self::membersDatabase()
+			->select($query)
+			->binds('vk_member_id', $vk_member_id)
+			->execute()
+			->fetch();
+
+		if (empty($memberData)) {
+			//create member
+			$params = new MemberCreate([
+				'username' => $vk_member_id,
+				'origin' => 'vk',
+			]);			
+			
+			return self::Create($params);
+		}
+		
+		$memberData['token'] = self::tokenCreate();
+		
+		self::tokenUpdate($vk_member_id, 'vk', $memberData['token']);
+
+		return new self($memberData);
+	}
+
 	public static function Get(int $memberId): ?Member {
 		if ($memberId < 1) {
 			throw new \RuntimeException('Wrong member ID format.');
 		}
 
 		$query = '  SELECT member_id, gender, bdate, rating
-  					FROM member					
+  					FROM member
   					WHERE member_id = :memberId';
 
 		$memberData = self::membersDatabase()
@@ -44,7 +88,7 @@ class Member {
 		return new self($memberData);
 	}
 
-	public static function Create(\RequestParameters\MemberCreate $property): ?Member {
+	public static function Create(\RequestParameters\MemberCreate $property): ?Member {		
 		if (empty($property)) {
 			throw new \RuntimeException('Member data is empty.');
 		}
@@ -59,16 +103,16 @@ class Member {
 
 		$password = $property->password;
 		if (empty($property->password)) {
-			$password = self::CreateToken();
+			$password = self::tokenCreate();
 		}
-		
+
 		$memberDetails = [
 			'origin' => $property->origin,
 			'username' => $property->username,
 			'password' => password_hash($password, PASSWORD_BCRYPT),
 			'status' => self::STATUS_NEW,
-			'token' => self::CreateToken(),
-			'token_expiry' => \db::expression('DATE_ADD(UTC_TIMESTAMP(), INTERVAL 4 HOUR)'),
+			'token' => self::tokenCreate(),
+			'token_expiry' => self::tokenExpiry(),
 			'last_login' => \db::expression('UTC_TIMESTAMP()'),
 			'date_added' => \db::expression('UTC_TIMESTAMP()'),
 		];
@@ -91,11 +135,31 @@ class Member {
 
 		self::membersDatabase()->commit();
 
-		return self::get($memberDetails['member_id']);
+		return new self([
+			'member_id' => $memberDetails['member_id'],
+			'token' => $memberDetails['token'],
+		]);
 	}
 
-	private static function CreateToken(): string {
+	private static function tokenCreate(): string {
 		return 'M' . password_hash(uniqid() . uniqid(), PASSWORD_BCRYPT);
+	}
+	
+	private static function tokenExpiry() {
+		return \db::expression('DATE_ADD(UTC_TIMESTAMP(), INTERVAL 4 HOUR)');
+	}
+	
+	private static function tokenUpdate($username, $origin, $newToken) {
+		$result = self::membersDatabase()
+			->update('member_details')
+			->values([
+				'token' => $newToken,
+				'token_expiry' => self::tokenExpiry(),
+			])
+			->where('username = :username AND origin = :origin')
+			->binds('username', $username)
+			->binds('origin', $origin)
+			->execute();
 	}
 
 	public static function membersDatabase(): \db {

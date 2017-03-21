@@ -124,7 +124,7 @@ class FormValidation extends validation {
 
 		$validation->add_field('username')
 			->add_rule(validation::NOT_EMPTY, null, 'Username cannot be empty.')
-			->add_rule(validation::EMAIL, null, 'Username should be a valid email address.')
+			//->add_rule(validation::EMAIL, null, 'Username should be a valid email address.')
 			->add_rule(validation::MAX_LENGTH, 255, 'Username\'s length cannot be more than 255 characters.');
 
 		$validation->add_field('password')

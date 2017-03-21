@@ -3,8 +3,8 @@ namespace RequestParameters;
 
 class MemberCreate extends MemberRequestParameters {
 	//member
-	protected $gender;
-	protected $bdate;
+	protected $gender = 'unknown';
+	protected $bdate = '1800-01-01';
 
 	//member_details
 	protected $origin;
