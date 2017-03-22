@@ -163,9 +163,9 @@ class Member {
 			->binds('profile', $profile)
 			->execute();
 	}
-
+	
 	public static function tokenExpiryUpdate($member_id, $token) {
-		return
+		return 
 			self::membersDatabase()
 				->update('member_profile')
 				->values([
@@ -189,11 +189,11 @@ class Member {
 			->fetch();
 
 		if (empty($result)) {
-			throw new \AuthenticationException(410);
+			throw new \AuthenticationException('TOKEN_NOT_EXIST', 410);
 		}
-
+		
 		if ($result['member_id'] == 0) {
-			throw new \AuthenticationException('Invalid access token', 403);
+			throw new \AuthenticationException('TOKEN_EXPIRED', 411);
 		}
 
 		return $result['member_id'];
