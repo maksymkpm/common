@@ -10,8 +10,8 @@ class MemberEdit extends MemberRequestParameters {
 	protected $last_login;
 	protected $date_added;
 
-	//member_details
-	protected $origin;
+	//member_profile
+	protected $profile;
 	protected $username;
 	protected $password;
 	protected $status;

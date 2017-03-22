@@ -6,8 +6,8 @@ class MemberCreate extends MemberRequestParameters {
 	protected $gender = 'unknown';
 	protected $bdate = '1800-01-01';
 
-	//member_details
-	protected $origin;
+	//member_profile
+	protected $profile;
 	protected $username;
 	protected $password;
 	protected $token;

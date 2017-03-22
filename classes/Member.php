@@ -23,12 +23,11 @@ class Member {
 	}
 
 	public static function Auth(array $data = []): ?Member {
-		
-		if (!isset($data['origin'])) {
-			throw new \RuntimeException('Unknown origin.');
+		if (!isset($data['profile'])) {
+			throw new \RuntimeException('Unknown profile type.');
 		}
 
-		switch ($data['origin']) {
+		switch ($data['profile']) {
 			case 'vk':
 				$result = self::AuthVK($data['vk_member_id']);
 				break;
@@ -38,9 +37,9 @@ class Member {
 	}
 
 	private static function AuthVK($vk_member_id) {
-		
-		$query = '	SELECT member_id
-					FROM member_details
+	
+		$query = '	SELECT member_id, IF(token_expiry < NOW(), "", token) token
+					FROM member_profile
 					WHERE username = :vk_member_id';
 
 		$memberData = self::membersDatabase()
@@ -53,13 +52,16 @@ class Member {
 			//create member
 			$params = new MemberCreate([
 				'username' => $vk_member_id,
-				'origin' => 'vk',
+				'profile' => 'vk',
 			]);			
 			
 			return self::Create($params);
 		}
 		
-		$memberData['token'] = self::tokenCreate();
+		//if token expired, create new token
+		if (empty($memberData['token'])) {
+			$memberData['token'] = self::tokenCreate();
+		}
 		
 		self::tokenUpdate($vk_member_id, 'vk', $memberData['token']);
 
@@ -107,7 +109,7 @@ class Member {
 		}
 
 		$memberDetails = [
-			'origin' => $property->origin,
+			'profile' => $property->profile,
 			'username' => $property->username,
 			'password' => password_hash($password, PASSWORD_BCRYPT),
 			'status' => self::STATUS_NEW,
@@ -129,7 +131,7 @@ class Member {
 		$memberDetails['member_id'] = self::membersDatabase()->last_insert_id();
 
 		self::membersDatabase()
-			->insert('member_details')
+			->insert('member_profile')
 			->values($memberDetails)
 			->execute();
 
@@ -149,16 +151,16 @@ class Member {
 		return \db::expression('DATE_ADD(UTC_TIMESTAMP(), INTERVAL 4 HOUR)');
 	}
 	
-	private static function tokenUpdate($username, $origin, $newToken) {
+	private static function tokenUpdate($username, $profile, $newToken) {
 		$result = self::membersDatabase()
-			->update('member_details')
+			->update('member_profile')
 			->values([
 				'token' => $newToken,
 				'token_expiry' => self::tokenExpiry(),
 			])
-			->where('username = :username AND origin = :origin')
+			->where('username = :username AND profile = :profile')
 			->binds('username', $username)
-			->binds('origin', $origin)
+			->binds('profile', $profile)
 			->execute();
 	}
 
