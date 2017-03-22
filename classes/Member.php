@@ -163,9 +163,9 @@ class Member {
 			->binds('profile', $profile)
 			->execute();
 	}
-	
+
 	public static function tokenExpiryUpdate($member_id, $token) {
-		return 
+		return
 			self::membersDatabase()
 				->update('member_profile')
 				->values([
@@ -189,9 +189,9 @@ class Member {
 			->fetch();
 
 		if (empty($result)) {
-			throw new \RuntimeException('Provided token is not verified.');
+			throw new \AuthenticationException(410);
 		}
-		
+
 		if ($result['member_id'] == 0) {
 			throw new \AuthenticationException('Invalid access token', 403);
 		}

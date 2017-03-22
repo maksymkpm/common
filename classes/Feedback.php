@@ -96,10 +96,12 @@ class Feedback {
 
       return self::feedbackDatabase()->query($query, [':issue_id' => $issue_id])->execute();
     }
-	
+
 	//@todo
-	private static function updateRating($member_id, $data) {}
-	
+	private static function updateRating($comment_id) {
+
+	}
+
 	//@todo
 	private static function calculateRating($data) {}
 
