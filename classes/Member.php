@@ -37,7 +37,7 @@ class Member {
 	}
 
 	private static function AuthVK($vk_member_id) {
-	
+
 		$query = '	SELECT member_id, IF(token_expiry < NOW(), "", token) token
 					FROM member_profile
 					WHERE username = :vk_member_id';
@@ -53,16 +53,16 @@ class Member {
 			$params = new MemberCreate([
 				'username' => $vk_member_id,
 				'profile' => 'vk',
-			]);			
-			
+			]);
+
 			return self::Create($params);
 		}
-		
+
 		//if token expired, create new token
 		if (empty($memberData['token'])) {
 			$memberData['token'] = self::tokenCreate();
 		}
-		
+
 		self::tokenUpdate($vk_member_id, 'vk', $memberData['token']);
 
 		return new self($memberData);
@@ -90,7 +90,7 @@ class Member {
 		return new self($memberData);
 	}
 
-	public static function Create(\RequestParameters\MemberCreate $property): ?Member {		
+	public static function Create(\RequestParameters\MemberCreate $property): ?Member {
 		if (empty($property)) {
 			throw new \RuntimeException('Member data is empty.');
 		}
@@ -146,11 +146,11 @@ class Member {
 	private static function tokenCreate(): string {
 		return 'M' . password_hash(uniqid() . uniqid(), PASSWORD_BCRYPT);
 	}
-	
+
 	private static function tokenExpiry() {
 		return \db::expression('DATE_ADD(UTC_TIMESTAMP(), INTERVAL 4 HOUR)');
 	}
-	
+
 	private static function tokenUpdate($username, $profile, $newToken) {
 		$result = self::membersDatabase()
 			->update('member_profile')
@@ -162,6 +162,41 @@ class Member {
 			->binds('username', $username)
 			->binds('profile', $profile)
 			->execute();
+	}
+	
+	public static function tokenExpiryUpdate($member_id, $token) {
+		return 
+			self::membersDatabase()
+				->update('member_profile')
+				->values([
+					'token_expiry' => self::tokenExpiry(),
+				])
+				->where('token = :token AND member_id = :member_id')
+				->binds('token', $token)
+				->binds('member_id', $member_id)
+				->execute();
+	}
+
+	public static function getMemberByToken($token) {
+		$query = '	SELECT IF(token_expiry < NOW(), 0, member_id) AS member_id
+					FROM member_profile
+					WHERE token = :token';
+
+		$result = self::membersDatabase()
+			->select($query)
+			->binds('token', $token)
+			->execute()
+			->fetch();
+
+		if (empty($result)) {
+			throw new \RuntimeException('Provided token is not verified.');
+		}
+		
+		if ($result['member_id'] == 0) {
+			throw new \AuthenticationException('Invalid access token', 403);
+		}
+
+		return $result['member_id'];
 	}
 
 	public static function membersDatabase(): \db {
