@@ -11,19 +11,24 @@ class Follow {
 		$follow = [
 			'member_id' => $property->member_id,
 			'issue_id' => $property->issue_id,
-			'date_added' => \db::expression('UTC_TIMESTAMP()'),
 		];
 
 		new \FormValidation($follow, 'FollowIssue');
 
-		$result = self::followDatabase()
-			->insert('follow_issue')
-			->values($follow)
-			->execute();
+		$query = "
+			INSERT INTO follow_issue (member_id, issue_id, date_added) VALUES (
+				:member_id, :issue_id, UTC_TIMESTAMP())
+			ON DUPLICATE KEY 
+			UPDATE date_finished = NULL, date_added = UTC_TIMESTAMP()
+			";
+
+		$result = (bool) self::followDatabase()->query($query, $follow)->execute();
 
 		if (!$result) {
             throw new RuntimeException('Couldnt follow the issue.');
         }
+
+		return [$result];
 
 		//@todo update rating of issue author
 	}
@@ -40,7 +45,7 @@ class Follow {
 
 		new \FormValidation($follow, 'FollowIssue');
 
-		$result = self::followDatabase()
+		$result = (bool) self::followDatabase()
 			->update('follow_issue')
 			->values([
 				'date_finished' => \db::expression('UTC_TIMESTAMP()'),
@@ -55,6 +60,7 @@ class Follow {
         }
 
 		//@todo update rating of issue author
+		return [$result];
 	}
 
 	public static function Member(\RequestParameters\FollowMember $property) {
@@ -65,23 +71,27 @@ class Follow {
 		$follow = [
 			'member_id' => $property->member_id,
 			'follower_id' => $property->follower_id,
-			'date_added' => \db::expression('UTC_TIMESTAMP()'),
 		];
 
 		new \FormValidation($follow, 'FollowMember');
 
-		$result = self::followDatabase()
-			->insert('follow_member')
-			->values($follow)
-			->execute();
+		$query = "
+			INSERT INTO follow_member (follower_id, member_id, date_added) VALUES (
+				:follower_id, :member_id, UTC_TIMESTAMP())
+			ON DUPLICATE KEY 
+			UPDATE date_finished = NULL, date_added = UTC_TIMESTAMP()
+			";
+
+		$result = (bool) self::followDatabase()->query($query, $follow)->execute();
 
 		if (!$result) {
             throw new RuntimeException('Couldnt follow member.');
         }
 
 		//@todo update rating of member
+		return [$result];
 	}
-	
+
 	public static function stopFollowMember(\RequestParameters\FollowMember $property) {
 		if (empty($property)) {
 			throw new \RuntimeException('Following data is empty.');
@@ -94,7 +104,7 @@ class Follow {
 
 		new \FormValidation($follow, 'FollowMember');
 
-		$result = self::followDatabase()
+		$result = (bool) self::followDatabase()
 			->update('follow_member')
 			->values([
 				'date_finished' => \db::expression('UTC_TIMESTAMP()'),
@@ -109,6 +119,7 @@ class Follow {
         }
 
 		//@todo update rating of member
+		return [$result];
 	}
 
 	public static function followDatabase(): \db {
