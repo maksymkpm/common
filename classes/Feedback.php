@@ -12,15 +12,18 @@ class Feedback {
             'issue_id' => $property->issue_id,
             'member_id' => $property->member_id,
             'helpful' => $property->helpful,
-            'date_added' => \db::expression('UTC_TIMESTAMP()'),
         ];
 
         new \FormValidation($data, 'FeedbackIssue');
 
-        $result = self::feedbackDatabase()
-            ->insert('feedback_issue')
-            ->values($data)
-            ->execute();
+		$query = "
+			INSERT INTO feedback_issue (issue_id, member_id, helpful, date_added) VALUES (
+				:issue_id, :member_id, :helpful, UTC_TIMESTAMP())
+			ON DUPLICATE KEY
+			UPDATE date_added = UTC_TIMESTAMP(), helpful = :helpful
+			";
+
+		$result = (bool) self::feedbackDatabase()->query($query, $data);
 
         if (!$result) {
             throw new RuntimeException('Feedback didnt added.');
@@ -44,15 +47,18 @@ class Feedback {
             'comment_id' => $property->comment_id,
             'member_id' => $property->member_id,
             'helpful' => $property->helpful,
-            'date_added' => \db::expression('UTC_TIMESTAMP()'),
         ];
 
         new \FormValidation($data, 'FeedbackIssueComment');
 
-        $result = self::feedbackDatabase()
-            ->insert('feedback_issue_comment')
-            ->values($data)
-            ->execute();
+		$query = "
+			INSERT INTO feedback_issue_comment (comment_id, member_id, helpful, date_added) VALUES (
+				:comment_id, :member_id, :helpful, UTC_TIMESTAMP())
+			ON DUPLICATE KEY
+			UPDATE date_added = UTC_TIMESTAMP(), helpful = :helpful
+			";
+
+		$result = (bool) self::feedbackDatabase()->query($query, $data);
 
         if (!$result) {
             throw new RuntimeException('Feedback didnt added.');

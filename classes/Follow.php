@@ -22,7 +22,7 @@ class Follow {
 			UPDATE date_finished = NULL, date_added = UTC_TIMESTAMP()
 			";
 
-		$result = (bool) self::followDatabase()->query($query, $follow)->execute();
+		$result = (bool) self::followDatabase()->query($query, $follow);
 
 		if (!$result) {
             throw new RuntimeException('Couldnt follow the issue.');
@@ -82,7 +82,7 @@ class Follow {
 			UPDATE date_finished = NULL, date_added = UTC_TIMESTAMP()
 			";
 
-		$result = (bool) self::followDatabase()->query($query, $follow)->execute();
+		$result = (bool) self::followDatabase()->query($query, $follow);
 
 		if (!$result) {
             throw new RuntimeException('Couldnt follow member.');
