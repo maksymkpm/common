@@ -62,6 +62,13 @@ class Member {
 				break;
 		}
 
+		try {
+			Log::MemberLogin([
+				'member_id' => $result->data['member_id'],
+				'profile' => $data['profile'],
+			]);
+		} catch (Exception $e) {}
+
 		return $result;
 	}
 
@@ -222,7 +229,7 @@ class Member {
      * @return \db\select|int
      */
     public static function tokenExpiryUpdate(int $member_id, string $token) {
-		return 
+		return
 			self::membersDatabase()
 				->update('member_profile')
 				->values([
@@ -253,7 +260,7 @@ class Member {
 		if (empty($result)) {
 			throw new \AuthenticationException('TOKEN_NOT_EXIST', 410);
 		}
-		
+
 		if ($result['member_id'] == 0) {
 			throw new \AuthenticationException('TOKEN_EXPIRED', 411);
 		}
