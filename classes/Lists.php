@@ -38,7 +38,7 @@ class Lists {
 
 		$query .= $where . self::$binding['Issues'];
 
-		return self::issueDatabase()
+		return self::Database()
 			->select($query)
 			->binds($bind['where'])
 			->execute()
@@ -63,7 +63,7 @@ class Lists {
   			FROM issue " . self::$binds['where_condition'] . 
 			"ORDER BY last_updated DESC";
 
-		return self::issueDatabase()
+		return self::Database()
 			->select($query, self::$binds['where'])
 			->execute()
 			->fetch_all();
@@ -75,7 +75,10 @@ class Lists {
 		});
 	}
 
-	public static function issueDatabase(): \db {
-		return \db::connect('issue');
+	public static function Database(): \db {
+		$db = \db::connect('issue');
+		$db->query('SET NAMES utf8');
+		
+		return $db;
 	}
 }

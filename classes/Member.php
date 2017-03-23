@@ -82,7 +82,7 @@ class Member {
 					FROM member_profile
 					WHERE username = :vk_member_id';
 
-		$memberData = self::membersDatabase()
+		$memberData = self::Database()
 			->select($query)
 			->binds('vk_member_id', $vk_member_id)
 			->execute()
@@ -121,7 +121,7 @@ class Member {
   					FROM member
   					WHERE member_id = :memberId';
 
-		$memberData = self::membersDatabase()
+		$memberData = self::Database()
 			->select($query)
 			->binds('memberId', $memberId)
 			->execute()
@@ -169,21 +169,21 @@ class Member {
 
 		new \FormValidation($memberDetails, 'MemberCreate');
 
-		self::membersDatabase()->begin();
+		self::Database()->begin();
 
-		self::membersDatabase()
+		self::Database()
 			->insert('member')
 			->values($member)
 			->execute();
 
-		$memberDetails['member_id'] = self::membersDatabase()->last_insert_id();
+		$memberDetails['member_id'] = self::Database()->last_insert_id();
 
-		self::membersDatabase()
+		self::Database()
 			->insert('member_profile')
 			->values($memberDetails)
 			->execute();
 
-		self::membersDatabase()->commit();
+		self::Database()->commit();
 
 		return new self([
 			'member_id' => $memberDetails['member_id'],
@@ -211,7 +211,7 @@ class Member {
      * @param $newToken
      */
     private static function tokenUpdate(string $username, string $profile, string $newToken) {
-		$result = self::membersDatabase()
+		$result = self::Database()
 			->update('member_profile')
 			->values([
 				'token' => $newToken,
@@ -230,7 +230,7 @@ class Member {
      */
     public static function tokenExpiryUpdate(int $member_id, string $token) {
 		return
-			self::membersDatabase()
+			self::Database()
 				->update('member_profile')
 				->values([
 					'token_expiry' => self::tokenExpiry(),
@@ -251,7 +251,7 @@ class Member {
 					FROM member_profile
 					WHERE token = :token';
 
-		$result = self::membersDatabase()
+		$result = self::Database()
 			->select($query)
 			->binds('token', $token)
 			->execute()
@@ -271,7 +271,10 @@ class Member {
     /**
      * @return db
      */
-    public static function membersDatabase(): \db {
-		return \db::connect('issue');
+    public static function Database(): \db {
+		$db = \db::connect('issue');
+		$db->query('SET NAMES utf8');
+		
+		return $db;
 	}
 }

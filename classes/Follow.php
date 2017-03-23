@@ -22,7 +22,7 @@ class Follow {
 			UPDATE date_finished = NULL, date_added = UTC_TIMESTAMP()
 			";
 
-		$result = (bool) self::followDatabase()->query($query, $follow);
+		$result = (bool) self::Database()->query($query, $follow);
 
 		if (!$result) {
             throw new RuntimeException('Couldnt follow the issue.');
@@ -45,7 +45,7 @@ class Follow {
 
 		new \FormValidation($follow, 'FollowIssue');
 
-		$result = (bool) self::followDatabase()
+		$result = (bool) self::Database()
 			->update('follow_issue')
 			->values([
 				'date_finished' => \db::expression('UTC_TIMESTAMP()'),
@@ -82,7 +82,7 @@ class Follow {
 			UPDATE date_finished = NULL, date_added = UTC_TIMESTAMP()
 			";
 
-		$result = (bool) self::followDatabase()->query($query, $follow);
+		$result = (bool) self::Database()->query($query, $follow);
 
 		if (!$result) {
             throw new RuntimeException('Couldnt follow member.');
@@ -104,7 +104,7 @@ class Follow {
 
 		new \FormValidation($follow, 'FollowMember');
 
-		$result = (bool) self::followDatabase()
+		$result = (bool) self::Database()
 			->update('follow_member')
 			->values([
 				'date_finished' => \db::expression('UTC_TIMESTAMP()'),
@@ -122,7 +122,10 @@ class Follow {
 		return [$result];
 	}
 
-	public static function followDatabase(): \db {
-		return \db::connect('issue');
+	public static function Database(): \db {
+		$db = \db::connect('issue');
+		$db->query('SET NAMES utf8');
+		
+		return $db;
 	}
 }

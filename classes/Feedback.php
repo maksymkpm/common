@@ -23,7 +23,7 @@ class Feedback {
 			UPDATE date_added = UTC_TIMESTAMP(), helpful = :helpful
 			";
 
-		$result = (bool) self::feedbackDatabase()->query($query, $data);
+		$result = (bool) self::Database()->query($query, $data);
 
         if (!$result) {
             throw new RuntimeException('Feedback didnt added.');
@@ -58,7 +58,7 @@ class Feedback {
 			UPDATE date_added = UTC_TIMESTAMP(), helpful = :helpful
 			";
 
-		$result = (bool) self::feedbackDatabase()->query($query, $data);
+		$result = (bool) self::Database()->query($query, $data);
 
         if (!$result) {
             throw new RuntimeException('Feedback didnt added.');
@@ -85,7 +85,7 @@ class Feedback {
 			WHERE comment_id = :comment_id
 		";
 
-        return self::feedbackDatabase()->query($query, [':comment_id' => $comment_id])->execute();
+        return self::Database()->query($query, [':comment_id' => $comment_id])->execute();
     }
 
     private static function updateIssueHelpfulCount($issue_id, $helpful) {
@@ -100,7 +100,7 @@ class Feedback {
 			WHERE issue_id = :issue_id
 		";
 
-      return self::feedbackDatabase()->query($query, [':issue_id' => $issue_id])->execute();
+      return self::Database()->query($query, [':issue_id' => $issue_id])->execute();
     }
 
 	//@todo
@@ -111,7 +111,10 @@ class Feedback {
 	//@todo
 	private static function calculateRating($data) {}
 
-    public static function feedbackDatabase(): \db {
-        return \db::connect('issue');
-    }
+   public static function Database(): \db {
+		$db = \db::connect('issue');
+		$db->query('SET NAMES utf8');
+		
+		return $db;
+	}
 }

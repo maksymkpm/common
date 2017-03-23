@@ -29,7 +29,7 @@ class Issue {
   					FROM issue
   					WHERE issue_id = :issue_id';
 
-		$issueData = self::issueDatabase()
+		$issueData = self::Database()
 			->select($query)
 			->binds('issue_id', $issue_id)
 			->execute()
@@ -67,12 +67,12 @@ class Issue {
 
 		new \FormValidation($issueData, 'Issue');
 
-		self::issueDatabase()
+		self::Database()
 			->insert('issue')
 			->values($issueData)
 			->execute();
 
-		return self::Get(self::issueDatabase()->last_insert_id());
+		return self::Get(self::Database()->last_insert_id());
 	}
 
 	public static function Edit(\RequestParameters\IssueEdit $property): ?Issue {
@@ -91,7 +91,7 @@ class Issue {
 
 		new \FormValidation($issue_array, 'Issue');
 
-		self::issueDatabase()
+		self::Database()
 			->update('issue')
 			->values($issueData)
 			->where('issue_id = :issue_id')
@@ -106,7 +106,7 @@ class Issue {
 			throw new \RuntimeException('Invalid issue id provided.');
 		}
 
-		$result = self::issueDatabase()
+		$result = self::Database()
 						->update('issue')
 						->values([
 							'last_updated' => \db::expression('UTC_TIMESTAMP()'),
@@ -128,7 +128,7 @@ class Issue {
 			throw new \RuntimeException('Invalid issue id provided.');
 		}
 
-		$result = self::issueDatabase()
+		$result = self::Database()
 						->update('issue')
 						->values([
 							'last_updated' => \db::expression('UTC_TIMESTAMP()'),
@@ -150,7 +150,7 @@ class Issue {
 			throw new \RuntimeException('Invalid issue id provided.');
 		}
 
-		$result = self::issueDatabase()
+		$result = self::Database()
 						->update('issue')
 						->values([
 							'last_updated' => \db::expression('UTC_TIMESTAMP()'),
@@ -172,7 +172,7 @@ class Issue {
 			throw new \RuntimeException('Invalid issue id provided.');
 		}
 
-		$result = self::issueDatabase()
+		$result = self::Database()
 						->update('issue')
 						->values([
 							'last_updated' => \db::expression('UTC_TIMESTAMP()'),
@@ -189,7 +189,10 @@ class Issue {
 		throw new \RuntimeException('Issue is not archived.');
 	}
 
-	public static function issueDatabase(): \db {
-		return \db::connect('issue');
+	public static function Database(): \db {
+		$db = \db::connect('issue');
+		$db->query('SET NAMES utf8');
+		
+		return $db;
 	}
 }

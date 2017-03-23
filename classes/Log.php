@@ -7,13 +7,16 @@ class Log {
 
 		$data['date_added'] = \db::expression('UTC_TIMESTAMP()');
 
-		self::logDatabase()
+		self::Database()
 			->insert('member_login')
 			->values($data)
 			->execute();
 	}
 
-	public static function logDatabase(): \db {
-		return \db::connect('issue');
+	public static function Database(): \db {
+		$db = \db::connect('issue');
+		$db->query('SET NAMES utf8');
+		
+		return $db;
 	}
 }

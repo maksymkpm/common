@@ -27,7 +27,7 @@ class Comment {
   					FROM issue_comment
   					WHERE comment_id = :comment_id';
 
-		$commentData = self::commentDatabase()
+		$commentData = self::Database()
 			->select($query)
 			->binds('comment_id', $comment_id)
 			->execute()
@@ -58,12 +58,12 @@ class Comment {
 
 		new \FormValidation($commentData, 'Comment');
 
-		self::commentDatabase()
+		self::Database()
 			->insert('issue_comment')
 			->values($commentData)
 			->execute();
 
-		return self::Get(self::commentDatabase()->last_insert_id());
+		return self::Get(self::Database()->last_insert_id());
 	}
 
 	public static function Edit(\RequestParameters\CommentEdit $property): ?Comment {
@@ -82,7 +82,7 @@ class Comment {
 
 		new \FormValidation($issue_array, 'Comment');
 
-		self::commentDatabase()
+		self::Database()
 			->update('issue_comment')
 			->values($commentData)
 			->where('comment_id = :comment_id')
@@ -97,7 +97,7 @@ class Comment {
 			throw new \RuntimeException('Comment cannot be published without issue id.');
 		}
 
-		$result = self::commentDatabase()
+		$result = self::Database()
 						->update('issue_comment')
 						->values([
 							'last_updated' => \db::expression('UTC_TIMESTAMP()'),
@@ -121,7 +121,7 @@ class Comment {
 			throw new \RuntimeException('Comment cannot be deleted without issue id.');
 		}
 
-		$result = self::commentDatabase()
+		$result = self::Database()
 						->update('issue_comment')
 						->values([
 							'last_updated' => \db::expression('UTC_TIMESTAMP()'),
@@ -145,7 +145,7 @@ class Comment {
 			throw new \RuntimeException('Comment cannot be archived without issue id.');
 		}
 
-		$result = self::commentDatabase()
+		$result = self::Database()
 						->update('issue_comment')
 						->values([
 							'last_updated' => \db::expression('UTC_TIMESTAMP()'),
@@ -164,10 +164,6 @@ class Comment {
 		throw new \RuntimeException('Comment not archived.');
 	}
 
-	public static function commentDatabase(): \db {
-		return \db::connect('issue');
-	}
-
 	private static function updateIssueCount($issue_id, $add) {
 		$comments_amount = 'comments_amount+1';
 		if ($add !== true) {
@@ -180,6 +176,13 @@ class Comment {
 			WHERE issue_id = :issue_id
 		";
 
-		self::commentDatabase()->query($query, [':issue_id' => $issue_id]);
+		self::Database()->query($query, [':issue_id' => $issue_id]);
+	}
+	
+	public static function Database(): \db {
+		$db = \db::connect('issue');
+		$db->query('SET NAMES utf8');
+		
+		return $db;
 	}
 }
