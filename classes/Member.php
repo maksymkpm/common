@@ -2,15 +2,37 @@
 use \RequestParameters\MemberCreate;
 use \RequestParameters\MemberEdit;
 
+/**
+ * Class Member
+ */
 class Member {
-	const STATUS_NEW = 'new';
-	const STATUS_VERIFIED = 'verified';
-	const STATUS_DELELED = 'deleted';
-	const STATUS_ARCHIVED = 'archived';
+    /**
+     *
+     */
+    const STATUS_NEW = 'new';
+    /**
+     *
+     */
+    const STATUS_VERIFIED = 'verified';
+    /**
+     *
+     */
+    const STATUS_DELELED = 'deleted';
+    /**
+     *
+     */
+    const STATUS_ARCHIVED = 'archived';
 
-	protected $data;
+    /**
+     * @var array
+     */
+    protected $data;
 
-	private function __construct(array $data) {
+    /**
+     * Member constructor.
+     * @param array $data
+     */
+    private function __construct(array $data) {
 		if (empty($data) || empty($data['member_id'])) {
 			throw new \RuntimeException('Incorrect member data');
 		}
@@ -18,11 +40,18 @@ class Member {
 		$this->data = $data;
 	}
 
-	public function returnData() {
+    /**
+     * @return array
+     */
+    public function returnData() {
 		return $this->data;
 	}
 
-	public static function Auth(array $data = []): ?Member {
+    /**
+     * @param array $data
+     * @return Member|null
+     */
+    public static function Auth(array $data = []): ?Member {
 		if (!isset($data['profile'])) {
 			throw new \RuntimeException('Unknown profile type.');
 		}
@@ -36,7 +65,11 @@ class Member {
 		return $result;
 	}
 
-	private static function AuthVK($vk_member_id) {
+    /**
+     * @param $vk_member_id
+     * @return Member|null
+     */
+    private static function AuthVK($vk_member_id) {
 
 		$query = '	SELECT member_id, IF(token_expiry < NOW(), "", token) token
 					FROM member_profile
@@ -68,7 +101,11 @@ class Member {
 		return new self($memberData);
 	}
 
-	public static function Get(int $memberId): ?Member {
+    /**
+     * @param int $memberId
+     * @return Member|null
+     */
+    public static function Get(int $memberId): ?Member {
 		if ($memberId < 1) {
 			throw new \RuntimeException('Wrong member ID format.');
 		}
@@ -90,7 +127,11 @@ class Member {
 		return new self($memberData);
 	}
 
-	public static function Create(\RequestParameters\MemberCreate $property): ?Member {
+    /**
+     * @param MemberCreate $property
+     * @return Member|null
+     */
+    public static function Create(\RequestParameters\MemberCreate $property): ?Member {
 		if (empty($property)) {
 			throw new \RuntimeException('Member data is empty.');
 		}
@@ -143,15 +184,26 @@ class Member {
 		]);
 	}
 
-	private static function tokenCreate(): string {
+    /**
+     * @return string
+     */
+    private static function tokenCreate(): string {
 		return 'M' . password_hash(uniqid() . uniqid(), PASSWORD_BCRYPT);
 	}
 
-	private static function tokenExpiry() {
+    /**
+     * @return \db\expression
+     */
+    private static function tokenExpiry() {
 		return \db::expression('DATE_ADD(UTC_TIMESTAMP(), INTERVAL 4 HOUR)');
 	}
 
-	private static function tokenUpdate($username, $profile, $newToken) {
+    /**
+     * @param $username
+     * @param $profile
+     * @param $newToken
+     */
+    private static function tokenUpdate(string $username, string $profile, string $newToken) {
 		$result = self::membersDatabase()
 			->update('member_profile')
 			->values([
@@ -163,8 +215,13 @@ class Member {
 			->binds('profile', $profile)
 			->execute();
 	}
-	
-	public static function tokenExpiryUpdate($member_id, $token) {
+
+    /**
+     * @param $member_id
+     * @param $token
+     * @return \db\select|int
+     */
+    public static function tokenExpiryUpdate(int $member_id, string $token) {
 		return 
 			self::membersDatabase()
 				->update('member_profile')
@@ -177,7 +234,12 @@ class Member {
 				->execute();
 	}
 
-	public static function getMemberByToken($token) {
+    /**
+     * @param $token
+     * @return mixed
+     * @throws AuthenticationException
+     */
+    public static function getMemberByToken(string $token) {
 		$query = '	SELECT IF(token_expiry < NOW(), 0, member_id) AS member_id
 					FROM member_profile
 					WHERE token = :token';
@@ -199,7 +261,10 @@ class Member {
 		return $result['member_id'];
 	}
 
-	public static function membersDatabase(): \db {
+    /**
+     * @return db
+     */
+    public static function membersDatabase(): \db {
 		return \db::connect('issue');
 	}
 }
