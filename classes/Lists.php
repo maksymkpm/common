@@ -7,15 +7,16 @@ class Lists {
 		'Issues' => ' ORDER BY i.last_updated DESC LIMIT 10',
 		'MyIssues' => [],
 	];
+	
+	private static $binds = [
+		'where' => [],
+		'where_condition' => 'WHERE ',
+	];
 
 	public static function Issues(\RequestParameters\ListGet $properties) {
 		$bind= [
 			'where' => []
 		];
-
-		$properties = (object) array_filter((array) $properties, function ($val) {
-			return (!is_null($val) && !empty($val));
-		});
 
 		$query = '
 			SELECT i.issue_id, i.member_id, i.title, i.description, i.class_id, i.category_id, i.object_id,
@@ -24,7 +25,7 @@ class Lists {
 			';
 
 		$where = 'WHERE ';
-		foreach ($properties as $key => $value) {
+		foreach (self::ParseObject($properties) as $key => $value) {
 			$where .= "i.{$key} = :{$key} AND ";
 
 			$bind['where'][":{$key}"] = $value;
@@ -45,24 +46,25 @@ class Lists {
 	}
 
 	public static function MemberIssues(\RequestParameters\ListMemberIssues $properties) {
-		$bind = [];
-
-		$where = 'WHERE ';
+		
 		foreach (self::ParseObject($properties) as $key => $value) {
-			$where .= "{$key} = :{$key} AND ";
-			$bind[$key] = $value;
+			self::$binds['where_condition'] .= "{$key} = :{$key} AND ";
+			self::$binds['where'][$key] = $value;
 		}
 
-		$where = substr($where, 0, -4);
+		if (empty(self::$binds['where'])) {
+			throw new \RuntimeException('MemberIssues parameters are empty.');
+		}
+
+		self::$binds['where_condition'] = substr(self::$binds['where_condition'], 0, -4);
 
 		$query = "
 			SELECT issue_id, title, status, helpful, not_helpful, last_updated, date_added
-  			FROM issue
-			{$where}
-			ORDER BY last_updated DESC";
+  			FROM issue " . self::$binds['where_condition'] . 
+			"ORDER BY last_updated DESC";
 
 		return self::issueDatabase()
-			->select($query, $bind)
+			->select($query, self::$binds['where'])
 			->execute()
 			->fetch_all();
 	}

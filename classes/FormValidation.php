@@ -1,7 +1,8 @@
 <?php
 class FormValidation extends validation {
 	protected $forms = [
-		'Comment', 'Issue', 'FeedbackIssue', 'FeedbackIssueComment', 'MemberCreate'
+		'Comment', 'Issue', 'FeedbackIssue', 'FeedbackIssueComment', 'MemberCreate',
+		'FollowIssue', 'FollowMember'
 	];
 
 	public function __construct(array $data, string $form) {
@@ -28,6 +29,38 @@ class FormValidation extends validation {
 
         $validation->add_field('helpful')
             ->add_rule(validation::NOT_EMPTY, null, 'Feedback cannot be empty.');
+
+        if (!$validation->is_valid($data)) {
+            throw new ValidationException($validation->get_errors());
+        }
+    }
+	
+	public static function FollowIssue(array $data) {
+        $validation = new parent('FollowIssue');
+
+        $validation->add_field('issue_id')
+            ->add_rule(validation::NOT_EMPTY, null, 'Issue id cannot be empty.')
+            ->add_rule(validation::IS_NUMBER, null, 'Invalid issue id.');
+
+        $validation->add_field('member_id')
+            ->add_rule(validation::NOT_EMPTY, null, 'Member id cannot be empty.')
+            ->add_rule(validation::IS_NUMBER, null, 'Invalid member id.');
+
+        if (!$validation->is_valid($data)) {
+            throw new ValidationException($validation->get_errors());
+        }
+    }
+	
+	public static function FollowMember(array $data) {
+        $validation = new parent('FollowMember');
+
+        $validation->add_field('follower_id')
+            ->add_rule(validation::NOT_EMPTY, null, 'Follower id cannot be empty.')
+            ->add_rule(validation::IS_NUMBER, null, 'Invalid follower id.');
+
+        $validation->add_field('member_id')
+            ->add_rule(validation::NOT_EMPTY, null, 'Member id cannot be empty.')
+            ->add_rule(validation::IS_NUMBER, null, 'Invalid member id.');
 
         if (!$validation->is_valid($data)) {
             throw new ValidationException($validation->get_errors());
