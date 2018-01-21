@@ -25,3 +25,4 @@ class Classification {
 		return config::get('classification.categories.' .$language);
 	}
 }
+
